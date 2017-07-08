@@ -1,5 +1,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <string.h>
+#include <QMessageBox>
+#include <QDir>
+#include <string>
+#include "admin.h"
+#include "getnewuser.h"
+#include "user.h"
+USER user;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -14,9 +22,19 @@ MainWindow::~MainWindow()
 }
 void MainWindow::on_pushButton_clicked()
 {
-    QString name=ui->lineEdit->text();
-    QString password=ui->lineEdit_2->text();
-    if(name=="admin"&&password=="123456"){
-        MessageBox:
+    //qDebug()<<"current applicationDirPath: "<<QCoreApplication::applicationDirPath();
+    //qDebug()<<"current currentPath: "<<QDir::currentPath();
+    user.format_user();
+    user.login_user.name=ui->lineEdit->text();
+    user.login_user.password=ui->lineEdit_2->text();
+    if(user.login_user.name == user.ordinary_user[0].name && user.login_user.password == user.ordinary_user[0].password){
+        QMessageBox::information(this,"提示","管理员登录成功!");
+        Admin.show();
+    }
+    for(int i=1;i<=user.user_number;++i){
+        if(user.login_user.name== user.ordinary_user[i].name && user.login_user.password == user.ordinary_user[i].password){
+            user.login_user.id=i;
+            QMessageBox::information(this,"提示","用户登录成功!");
+        }
     }
 }
