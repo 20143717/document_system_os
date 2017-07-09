@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QTextCodec>
 #include <QTextStream>
+#include <QIODevice>
 
 struct User{
     int id;
@@ -32,15 +33,11 @@ public:
         QTextCodec *codec = QTextCodec::codecForName("UTF-8");
         QTextCodec::setCodecForLocale(codec);
         QFile file("./user.txt");
-        if(!file.open(QIODevice::ReadWrite|QIODevice::Text)){
-            qDebug()<<"Can't open the file!"<<endl;
-        }
         QTextStream stream(&file);
-        if(!stream.atEnd()){
-            QString a=stream.readLine();
-            user_number=a.toInt();
-        }
         int ans=0;
+        if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+            qDebug()<<"WA"<<endl;
+        }
         while(!stream.atEnd()){
             ans++;
             QString a=stream.readLine();
@@ -51,6 +48,7 @@ public:
             ordinary_user[ans].id=ans;
             ordinary_user[ans].power=0;
         }
+        user_number=ans;
         file.close();
     }
 };

@@ -5,6 +5,7 @@
 #include "user.h"
 #include <QPushButton>
 #include "getnewuser.h"
+#include "deleteolduser.h"
 extern USER user;
 namespace Ui {
 class admin;
@@ -22,6 +23,7 @@ public:
 private:
     Ui::admin *ui;
     GetNewUser getnewuser;
+    DeleteOldUser deleteolduser;
 private slots:
     void on_pushButton_1_clicked();
     void on_pushButton_2_clicked();

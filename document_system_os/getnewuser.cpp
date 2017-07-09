@@ -31,29 +31,6 @@ void GetNewUser::on_certain_clicked(){
         ui->again->clear();
     }
     else{
-        /*QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-        QTextCodec::setCodecForLocale(codec);
-        QFile file("./user.txt");
-        if(!file.open(QIODevice::ReadWrite|QIODevice::Text)){
-            qDebug()<<"Can't open the file!"<<endl;
-        }
-        QTextStream stream(&file);
-        if(!stream.atEnd()){
-            QString a=stream.readLine();
-            user.user_number=a.toInt();
-        }
-        int ans=0;
-        while(!stream.atEnd()){
-            ans++;
-            QString a=stream.readLine();
-            QString b=stream.readLine();
-            user.ordinary_user[ans].name=a;
-            user.ordinary_user[ans].password=b;
-            user.ordinary_user[ans].id=ans;
-            user.ordinary_user[ans].power=0;
-        }
-        file.close();*/
-        //qDebug()<<"!"<<user.user_number;
         bool f=0;
         for(int i=1;i<=user.user_number;++i){
             if(user.ordinary_user[i].name==name_new){
@@ -73,23 +50,17 @@ void GetNewUser::on_certain_clicked(){
             user.ordinary_user[user.user_number].id=user.user_number;
 
             QFile fll("./user.txt");
-            if(!fll.open(QIODevice::ReadWrite|QIODevice::Text)){
+            QTextStream stream(&fll);
+            if(!fll.open(QIODevice::WriteOnly | QIODevice::Append)){
                 qDebug()<<"WA"<<endl;
             }
-            QTextStream stream(&fll);
-            if(fll.open(QFile::WriteOnly| QIODevice::Truncate)){
-
-                stream<<user.user_number<<endl;
-            }
-            else qDebug()<<"MMP";
-            for(int i=1;i<=user.user_number;++i){
-                if(fll.open(QIODevice::ReadWrite | QIODevice::Truncate)){
-                    stream<<user.ordinary_user[i].name;
-                    stream<<user.ordinary_user[i].password;
-                }
-            }
             fll.close();
-
+            if(fll.open(QIODevice::WriteOnly | QIODevice::Append)){
+                    stream<<user.ordinary_user[user.user_number].name<<endl;
+                    stream<<user.ordinary_user[user.user_number].password<<endl;
+            }
+            fll.flush();
+            fll.close();
             QMessageBox::information(this,"提示","成功添加该用户");
             ui->name->clear();
             ui->password->clear();

@@ -15,15 +15,21 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     admin.cpp \
-    getnewuser.cpp
+    getnewuser.cpp \
+    deleteolduser.cpp \
+    file_system.cpp \
+    file.cpp
 
 HEADERS  += mainwindow.h \
-    login.h \
     define.h \
     user.h \
     admin.h \
-    getnewuser.h
+    getnewuser.h \
+    deleteolduser.h \
+    file_system.h
 
 FORMS    += mainwindow.ui \
     admin.ui \
-    getnewuser.ui
+    getnewuser.ui \
+    deleteolduser.ui \
+    file_system.ui

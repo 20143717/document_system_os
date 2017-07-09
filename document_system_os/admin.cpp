@@ -7,7 +7,6 @@
 #include <QFile>
 #include <QTextCodec>
 #include <QtWidgets/QListWidget>
-#include "user.h"
 
 extern USER user;
 admin::admin(QWidget *parent) :
@@ -31,6 +30,7 @@ void admin::on_pushButton_2_clicked(){
 }
 
 void admin::on_pushButton_3_clicked(){
+    ui->list->clear();
     this->reject();
 }
 void admin::on_pushButton_4_clicked(){
