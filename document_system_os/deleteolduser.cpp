@@ -53,8 +53,8 @@ void DeleteOldUser::on_certain_clicked(){
             for(int i=1;i<=user.user_number;++i){
                 fll.close();
                 if(fll.open(QIODevice::WriteOnly | QIODevice::Append)){
-                    stream<<user.ordinary_user[i].name;
-                    stream<<user.ordinary_user[i].password;
+                    stream<<user.ordinary_user[i].name<<endl;
+                    stream<<user.ordinary_user[i].password<<endl;
                 }
             }
             fll.close();

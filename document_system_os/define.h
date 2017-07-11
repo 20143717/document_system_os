@@ -8,7 +8,7 @@
 //#define DISK_ADDRESS_NUM 20        //每个i节点最多指向10块，addr[0]~addr[9]
 #define INode_Max_Num 20
 #define Directory_Item_Length 20      //the length of filename or username
-#define The_Max_Size_File 16		//大小
+#define Directory_Item_Size 16		//大小
 #define Name_Size 8   //名字长度
 #define Directory_Item_Num 10 // SFD大小
 #define Directory_Num 1024

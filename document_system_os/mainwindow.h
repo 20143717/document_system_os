@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <admin.h>
+#include "file_system.h"
 
 namespace Ui {
 class MainWindow;
@@ -16,6 +17,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     admin Admin;
+    file_system File_system;
 private:
     Ui::MainWindow *ui;
 private slots:
