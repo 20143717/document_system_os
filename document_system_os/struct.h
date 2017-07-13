@@ -43,10 +43,6 @@ struct Super_Block {
 *  size: 32B
 *  sumSize: 32KB
 */
-struct tTime {
-    char tdate[64];
-    char ttime[64];
-};
 struct iNode {//i节点
     int id;//节点号
     int fileCount;//引用计数,表示有几个目录引用这个文件
@@ -56,7 +52,7 @@ struct iNode {//i节点
     int fileMode;//文件类型,区分该i节点是文件(2)还是目录(1)还是用户, 1 means file, 0 means dir
     int userId;   //使用者ID
     int userRight[Directory_Item_Num];//使用者权限
-    tTime time;
+    QString time;
     int diskAddress[INode_Max_Num];
     //如果这个i结点是一个文件，Addr数组表示文件各个物理块位置编号
     //如果是一个目录，表示目录的各个文件or文件夹的SFD的下标,所以一个目录下最大有NADDR个文件/目录

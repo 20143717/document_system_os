@@ -2,6 +2,7 @@
 #include "ui_file_system.h"
 #include <QDebug>
 #include <QTextStream>
+#include <QFile>
 #include <windows.h>
 #include <time.h>
 #include <QTextCodec>
@@ -44,7 +45,7 @@ void file_system::showEvent(QShowEvent *){
     ui->listWidget->setIconSize(QSize(80,70));
     ui->listWidget->setViewMode(QListView::IconMode);
     ui->listWidget->setMovement(QListView::Static);
-    //run();
+    run();
     ui->login_name->setText(user.login_user.name);
     ui->path->setText("/");
 }
@@ -102,10 +103,6 @@ void file_system::format(){
             //ofstream ofstr4("data.txt", ios::out);
             QFile fll("./data.txt");
             QTextStream stream(&fll);
-            if(!fll.open(QIODevice::WriteOnly | QIODevice::Append)){
-                qDebug()<<"WA"<<endl;
-            }
-            fll.close();
             //init superblock
             super_block.id = 1;
             super_block.iNodeTotalNum = 32;
@@ -118,25 +115,17 @@ void file_system::format(){
             super_block.iNodeFreeStack[2] = 1;
             memset(super_block.dataBlockFreeStack, -1, sizeof(super_block.dataBlockFreeStack));
             //super_block.superBlockFlag = 0;
-            if(fll.open(QIODevice::WriteOnly | QIODevice::Append)){
-            stream << super_block.id << " " << super_block.iNodeTotalNum << " " <<
-                      super_block.iNodeFreeNum << " " << super_block.dataBlockTotalNum << " " <<
-                      super_block.dataBlockFreeNum <<" "<<endl;
+            if(fll.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text )){
+            stream << super_block.id << endl ;stream<< super_block.iNodeTotalNum << endl <<
+                      super_block.iNodeFreeNum << endl << super_block.dataBlockTotalNum << endl <<
+                      super_block.dataBlockFreeNum <<endl;
             }
             for (int i = 0; i < INode_Free_Stack_Num; i++) {
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << super_block.iNodeFreeStack[i] << " ";
+                stream << super_block.iNodeFreeStack[i] << endl;
             }
-            if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream <<endl;
-
             for (int i = 0; i < Data_Block_Free_Stack_Num; i++) {
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << super_block.dataBlockFreeStack[i] << " ";
+                stream << super_block.dataBlockFreeStack[i] << endl;
             }
-            if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-            stream << endl;
-
             /*there are some problem*/
 
             //(3) int Inode
@@ -146,9 +135,9 @@ void file_system::format(){
             inode[0].fileMode = -1;
             inode[0].userId = -1;
             memset(inode[0].userRight,-1,sizeof(inode[0].userRight));
-            time_t t = time(0);
-            strftime(inode[0].time.tdate,sizeof(inode[0].time.tdate),"%Y/%m/%d",localtime(&t));
-            strftime(inode[0].time.ttime,sizeof(inode[0].time.ttime),"%X",localtime(&t));
+            time_t t;
+            time(&t);
+            inode[0].time=QString(QLatin1String(ctime(&t)));
             memset(inode[0].diskAddress,-1,sizeof(inode[0].diskAddress));
 
             inode[1].id = 1;
@@ -163,9 +152,9 @@ void file_system::format(){
                     inode[1].userRight[i] = 0;
                 }
             }
-            t = time(0);
-            strftime(inode[1].time.tdate,sizeof(inode[1].time.tdate),"%Y/%m/%d",localtime(&t));
-            strftime(inode[1].time.ttime,sizeof(inode[1].time.ttime),"%X",localtime(&t));
+            time_t timep;
+            time(&timep);
+            inode[1].time=QString(QLatin1String(ctime(&timep)));
             memset(inode[1].diskAddress,-1,sizeof(inode[1].diskAddress));
 
             inode[2].id = 2;
@@ -180,9 +169,9 @@ void file_system::format(){
                     inode[2].userRight[i] = 0;
                 }
             }
-            t = time(0);
-            strftime(inode[2].time.tdate,sizeof(inode[2].time.tdate),"%Y/%m/%d",localtime(&t));
-            strftime(inode[2].time.ttime,sizeof(inode[2].time.ttime),"%X",localtime(&t));
+            time_t timeq;
+            time(&timeq);
+            inode[2].time=QString(QLatin1String(ctime(&timeq)));
             memset(inode[2].diskAddress,-1,sizeof(inode[2].diskAddress));
             inode[2].diskAddress[0] = 0;
 
@@ -193,29 +182,19 @@ void file_system::format(){
                 inode[i].fileMode = -1;
                 inode[i].userId = -1;
                 memset(inode[i].userRight,-1,sizeof(inode[i].userRight));
-                strcpy(inode[i].time.tdate, "/");
-                strcpy(inode[i].time.ttime,"/");
                 memset(inode[i].diskAddress,-1,sizeof(inode[i].diskAddress));
             }
 
             for (int i = 0; i<INode_Num; i++)
             {
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append)){
-                stream << inode[i].id << " " << inode[i].fileCount << " " << inode[i].size << " " <<
-                          inode[i].fileMode << " " << inode[i].userId << " ";}
-                for(int j=0;j<Directory_Item_Num;j++) {
-                    if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                        stream << inode[i].userRight[j]<<" ";
-                }
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                    stream<<inode[i].time.tdate<<" "<<inode[i].time.ttime<<" ";
+                stream << inode[i].id << endl << inode[i].fileCount << endl << inode[i].size << endl <<
+                          inode[i].fileMode << endl << inode[i].userId << endl;
+                for(int j=0;j<Directory_Item_Num;j++)
+                        stream << inode[i].userRight[j]<< endl;
+                stream<<inode[i].time << endl;
+
                 for (int j=0; j < INode_Max_Num; j++)
-                {
-                    if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                        stream << inode[i].diskAddress[j] << " ";
-                }
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << endl;
+                        stream << inode[i].diskAddress[j] << endl;
             }
 
             MFD.init();  // only one mfd
@@ -229,12 +208,8 @@ void file_system::format(){
             {
                 Main_File_Directory_Item item = MFD.get(i);
                 if(i!=0) item.psw="/";
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream <<item.name<<" "<<item.psw<<" " << item.iNode << " ";
+                stream <<item.name<< endl <<item.psw<< endl << item.iNode << endl;
             }
-            if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-            stream << endl;
-
             sfdTable[0].iNode = 2;
             for(int i=0;i<Directory_Num;i++) {
                 for(int j=0;j<SFD.size();j++) {
@@ -243,15 +218,11 @@ void file_system::format(){
                 }
             }
             for(int i=0;i<Directory_Num;i++) {
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << sfdTable[i].iNode<<" ";
+                stream << sfdTable[i].iNode<<endl;
                 for (int j = 0; j < SFD.size(); j++)
                 {
-                    if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                    stream <<sfdTable[i].item[j].name<<" " << sfdTable[i].item[j].iNode<<" ";
+                    stream <<sfdTable[i].item[j].name<< endl << sfdTable[i].item[j].iNode<< endl;
                 }
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << endl;
             }
 
             //ofstr4 << "block"<<endl;
@@ -264,10 +235,8 @@ void file_system::format(){
                 }
             }
             for(int i=0;i<Block_Number;i++) {
-                if(fll.open(QIODevice::WriteOnly | QIODevice::Append))
                 stream<<Z[i].R<<endl;
             }
-            fll.flush();
             fll.close();
             PWD.clear();
         break;
@@ -484,44 +453,61 @@ void file_system::init(){
     }
     else
     {
+        //qDebug()<<"B"<<endl;
         load();
     }
 }
 
 void file_system::load(){
     QFile file("./data.txt");
-    QTextStream stream(&file);
 
-    stream >> super_block.id >> super_block.iNodeTotalNum >>
-              super_block.iNodeFreeNum >> super_block.dataBlockTotalNum >>
-              super_block.dataBlockFreeNum ;
+    if(!file.open(QIODevice::ReadOnly )){
+        qDebug()<<"WA"<<endl;
+    }
+    else{
+        QTextStream stream(&file);
+        super_block.id=stream.readLine().toInt();
+        super_block.iNodeTotalNum=stream.readLine().toInt();
+        super_block.iNodeFreeNum=stream.readLine().toInt();
+        super_block.dataBlockTotalNum=stream.readLine().toInt();
+        super_block.dataBlockFreeNum=stream.readLine().toInt();
     for (int i = 0; i < INode_Free_Stack_Num; i++) {
-        stream >> super_block.iNodeFreeStack[i];
+        super_block.iNodeFreeStack[i]=stream.readLine().toInt();
         qDebug() << super_block.iNodeFreeStack[i];
     }
 
     for (int i = 0; i < Data_Block_Free_Stack_Num; i++) {
-        stream >> super_block.dataBlockFreeStack[i];
+        super_block.dataBlockFreeStack[i]=stream.readLine().toInt();
         qDebug() << super_block.dataBlockFreeStack[i];
     }
     for (int i = 0; i<INode_Num; i++)
     {
 
-        stream >> inode[i].id >> inode[i].fileCount >> inode[i].size >>
-                  inode[i].fileMode >> inode[i].userId;
+        inode[i].id =stream.readLine().toInt();
+        inode[i].fileCount=stream.readLine().toInt();
+        inode[i].size =stream.readLine().toInt();
+        inode[i].fileMode =stream.readLine().toInt();
+        inode[i].userId =stream.readLine().toInt();
         for(int j=0;j<Directory_Item_Num;j++) {
-            stream >> inode[i].userRight[j];
+            inode[i].userRight[j]=stream.readLine().toInt();
         }
-        stream >> inode[i].time.tdate>>inode[i].time.ttime;
+        inode[i].time=stream.readLine();
         for (int j = 0; j < INode_Max_Num; j++)
         {
-            stream >> inode[i].diskAddress[j];
+           inode[i].diskAddress[j] =stream.readLine().toInt();;
         }
     }
+
+    /*
+     *
+     *
+     *
     for (int i = 0; i < MFD.size(); i++)//mfd
     {
         Main_File_Directory_Item item;
-        stream >> item.name >> item.psw >> item.iNode ;
+       item.name =stream.readLine();
+       item.psw =stream.readLine();
+       item.iNode =stream.readLine();
         if (i == 0) {
             MFD.item[0].iNode = 2;
             MFD.item[0].name=user.login_user.name;
@@ -554,12 +540,17 @@ void file_system::load(){
     {
        stream >> Z[i].R;
     }
-    /*initchengzu(0);*/
+            //initchengzu(0);
     file.close();
     MFD.iNode = 1;
     //when open this system, we are at /root/
     PWD.push_back("root");
     //cout<<PWD[0]<<endl;
+
+
+
+    */
+    }
 }
 
 void file_system::writein(){
@@ -567,40 +558,26 @@ void file_system::writein(){
     QTextStream stream(&file);
     //superblock
     if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-    stream << super_block.id << " " << super_block.iNodeTotalNum << " " <<
-              super_block.iNodeFreeNum << " " << super_block.dataBlockTotalNum << " " <<
-              super_block.dataBlockFreeNum <<" " << endl;
+    stream << super_block.id << endl << super_block.iNodeTotalNum <<endl <<
+              super_block.iNodeFreeNum << endl << super_block.dataBlockTotalNum << endl <<
+              super_block.dataBlockFreeNum  << endl;
     for (int i = 0; i < INode_Free_Stack_Num; i++) {
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-        stream << super_block.iNodeFreeStack[i] << " ";
+        stream << super_block.iNodeFreeStack[i] << endl;
     }
-    if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-        stream << endl;
     for (int i = 0; i < Data_Block_Free_Stack_Num; i++) {
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-            stream << super_block.dataBlockFreeStack[i] << " ";
+            stream << super_block.dataBlockFreeStack[i] << endl;
     }
-    if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-    stream << endl;
     //inode
     for (int i = 0; i < INode_Num; i++)
     {
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-        stream << inode[i].id << " " << inode[i].fileCount << " " << inode[i].size << " " <<
-                  inode[i].fileMode << " " << inode[i].userId << " ";
-        for(int j=0;j<Directory_Item_Num;j++) {
-            if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << inode[i].userRight[j]<<" ";
-            }
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-            stream<<inode[i].time.tdate<<" "<<inode[i].time.ttime<<" ";
+        stream << inode[i].id << endl << inode[i].fileCount << endl << inode[i].size << endl <<
+                  inode[i].fileMode << endl << inode[i].userId << endl;
+        for(int j=0;j<Directory_Item_Num;j++)
+                stream << inode[i].userRight[j]<<endl;
+        stream<<inode[i].time<<endl;
         for (int j = 0; j < INode_Max_Num; j++)
-        {
-            if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-                stream << inode[i].diskAddress[j] << " ";
-        }
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-            stream << endl;
+                stream << inode[i].diskAddress[j] << endl;
+
     }
 
     //mfd, sfd
@@ -608,28 +585,18 @@ void file_system::writein(){
     {
         Main_File_Directory_Item item = MFD.get(i);
         //cout<< sfdm.id << " " << sfdm.name << " " << sfdm.psw << " ";
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-        stream  << item.name << " "<<item.psw<<" " << item.iNode << " ";
+        stream  << item.name << endl <<item.psw<< endl << item.iNode << endl;
     }
-    if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-    stream << endl;
     for (int j = 0; j < Directory_Num;j++) {//sfd
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-        stream <<sfdTable[j].iNode<<" ";
+        stream <<sfdTable[j].iNode<<endl;
         for (int i = 0; i < SFD.size(); i++)
         {
             Symbol_File_Directory_Item item = sfdTable[j].get(i);
-            //cout<< sfdm.id << " " << sfdm.name << " ";
-            if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-            stream << item.name << " "<< item.iNode << " " ;
-            //cout << sfdm.name << "MM";
+            stream << item.name << endl<< item.iNode << endl ;
         }
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
-        stream << endl;
     }
     //ofstr4 << "block"<<endl;
     for(int i=0;i<Block_Number;i++) {
-        if(file.open(QIODevice::WriteOnly | QIODevice::Append))
             stream<<Z[i].R<<endl;
     }
     file.flush();
@@ -747,6 +714,7 @@ void file_system::cd_back(){
         PWD.erase(PWD.end());
     }
 }
+
 void file_system::pwd(){
 
     for(int i=0;i<PWD.size();++i){
@@ -754,6 +722,7 @@ void file_system::pwd(){
     }
     qDebug()<<endl;
 }
+
 void file_system::ls() {
 
     //judge wheather user have this right
@@ -769,6 +738,7 @@ void file_system::ls() {
     }
     qDebug()<<endl;
 }
+
 void file_system::ll() {
     //需要添加时间
 
@@ -807,7 +777,7 @@ void file_system::ll() {
                 }
                 qDebug()<<MFD.item[inode[tmp].userId].name<<" ";
                 qDebug()<<inode[tmp].size<<"B"<<" ";
-                qDebug()<<inode[tmp].time.tdate<<" "<<inode[tmp].time.ttime<<" ";
+                qDebug()<<inode[tmp].time<<" ";
                 qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<" ";
             }
             cout<<endl;
@@ -863,9 +833,9 @@ void file_system::mkdir() {
             inode[getINode].userRight[i] = 0;
         }
     }
-    time_t t = time(0);
-    strftime(inode[getINode].time.tdate,sizeof(inode[getINode].time.tdate),"%Y/%m/%d",localtime(&t));
-    strftime(inode[getINode].time.ttime,sizeof(inode[getINode].time.ttime),"%X",localtime(&t));
+    time_t t;
+    time(&t);
+    inode[getINode].time=QString(QLatin1String(ctime(&t)));
     int tmpsfd = sfdMalloc(getINode);
     if( tmpsfd == -1) {
         cout<<"error: cant't mkdir more dir!"<<endl;
@@ -932,20 +902,11 @@ void file_system::rename(QString dir1,QString dir2) {
 
 void file_system::touch(){
     QString fname="123";
-    while(1)
-    {
-        //cout << "Please input the size of the file in Byte: ";
-        //cin >> fsize;
-        //if (fsize <0 * BLOCKSIZE || fsize >10 * BLOCKSIZE) {
-            //cout << "Error! File size should be 0~10240 !" << endl;
-        //}
-        if (createFile(fname)) {
-            qDebug() << "Create " << fname << " sucessfully!" << endl;
-            break;
-        }
-        else {
-            qDebug() << "Error! Failed to create file! " << endl;
-        }
+    if (createFile(fname)) {
+         qDebug() << "Create " << fname << " sucessfully!" << endl;
+    }
+    else {
+         qDebug() << "Error! Failed to create file! " << endl;
     }
 }
 
@@ -978,9 +939,9 @@ int file_system::createFile(QString fname){
             inode[getINode].userRight[i] = 0;
         }
     }
-    time_t t = time(0);
-    strftime(inode[getINode].time.tdate,sizeof(inode[getINode].time.tdate),"%Y/%m/%d",localtime(&t));
-    strftime(inode[getINode].time.ttime,sizeof(inode[getINode].time.ttime),"%X",localtime(&t));
+    time_t t;
+    time(&t);
+    inode[getINode].time=QString(QLatin1String(ctime(&t)));
     inode[iNode].fileCount +=1;
     inode[iNode].size+=inode[getINode].size;
     QString namex;

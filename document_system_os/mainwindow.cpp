@@ -40,8 +40,9 @@ void MainWindow::on_pushButton_clicked()
             user.login_user.id=i;
             QMessageBox::information(this,"提示","用户登录成功!");
             //File_system.show();
-            this->File_system.show();
             this->resize(634,449);
+            this->File_system.show();
+
         }
     }
 }

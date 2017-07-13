@@ -16,6 +16,9 @@ class file_system : public QDialog
 public:
     explicit file_system(QWidget *parent = 0);
     ~file_system();
+    QString choose_name;
+    QString choose_type;
+private slots:
     void format();
     void init();
     void run();
@@ -38,9 +41,6 @@ public:
     void vim(QString file);
     void renamef(QString dir1,QString dir2);
     void cat(QString file);
-    QString choose_name;
-    QString choose_type;
-
 private:
     Ui::file_system *ui;
 protected:
