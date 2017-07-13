@@ -66,8 +66,8 @@ int createFile(QString fname)
     strftime(inode[getINode].time.ttime,sizeof(inode[getINode].time.ttime),"%X",localtime(&t));
     inode[iNode].fileCount +=1;
     inode[iNode].size+=inode[getINode].size;
-    char namex[Name_Size];
-    strcpy(namex, fname.c_str());
+    QString namex;
+    namex = fname;
     if (sfdTable[inode[iNode].diskAddress[0]].add(namex, getINode) == -1)
     {
         cout<<"error: can't make more directories!";
@@ -162,4 +162,6 @@ void cat(QString file) {
     }
     cout<<endl;
 }
+
+
 #endif // FILE_H

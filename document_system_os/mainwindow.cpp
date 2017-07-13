@@ -16,6 +16,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->File_system.hide();
+    File_system.setParent(this);
 }
 
 MainWindow::~MainWindow()
@@ -37,7 +39,9 @@ void MainWindow::on_pushButton_clicked()
         if(user.login_user.name== user.ordinary_user[i].name && user.login_user.password == user.ordinary_user[i].password){
             user.login_user.id=i;
             QMessageBox::information(this,"提示","用户登录成功!");
-            File_system.show();
+            //File_system.show();
+            this->File_system.show();
+            this->resize(634,449);
         }
     }
 }

@@ -14,6 +14,7 @@
 #include "struct.h"
 #include "user.h"
 #include "format.h"
+#include <QDebug>
 
 using namespace std;
 
@@ -111,12 +112,10 @@ void cd_back() {
 }
 void pwd() {
 
-    QVector<QString>::iterator it;
-    cout<<"/";
-    for(it = PWD.begin();it!=PWD.end();it++) {
-        cout<< PWD.at(it) <<"/";
+    for(int i=0;i<PWD.size();++i){
+        qDebug()<<PWD.at(i)<<"/";
     }
-    cout<<endl;
+    qDebug()<<endl;
 }
 void ls() {
 
@@ -169,10 +168,10 @@ void ll() {
                         cout<<"rwx"<<" ";
                         break;
                 }
-                cout<<MFD.item[inode[tmp].userId].name<<" ";
-                cout<<inode[tmp].size<<"B"<<" ";
-                cout<<inode[tmp].time.tdate<<" "<<inode[tmp].time.ttime<<" ";
-                cout<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<" ";
+                qDebug()<<MFD.item[inode[tmp].userId].name<<" ";
+                qDebug()<<inode[tmp].size<<"B"<<" ";
+                qDebug()<<inode[tmp].time.tdate<<" "<<inode[tmp].time.ttime<<" ";
+                qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<" ";
             }
             cout<<endl;
         }

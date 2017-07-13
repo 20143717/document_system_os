@@ -45,40 +45,11 @@ extern USER user;
 * iNodeMalloc()
 * apply for an iNode
 */
-int iNodeMalloc() {
-    if (super_block.iNodeFreeNum <= 0) {
-        return -1;
-    }
-    super_block.iNodeFreeNum--;
-    //inode[INODENUM];
-    int j;
-    for (int i = 0; i < INode_Free_Stack_Num; i++)
-    {
-        if (!super_block.iNodeFreeStack[i])
-        {
-            super_block.iNodeFreeStack[i] = 1;
-            j = i;
-            break;
-        }
-
-    }
-    return j;
-}
 
 /*
 * sudoFormat()
 * cmd: format
 */
-void sudoFormat() {
-    void run();
-    if(strcmp(user.login_user.name, "root") == 0) {
-        remove("data.txt");
-        format();
-        load();
-    } else {
-        cout<<"error: you don't have this right!"<<endl;
-        return ;
-    }
-}
+
 
 #endif // FORMAT_H

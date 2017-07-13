@@ -27,9 +27,6 @@ HEADERS  += mainwindow.h \
     deleteolduser.h \
     file_system.h \
     struct.h \
-    file.h \
-    directory.h \
-    format.h \
     free_block_link.h \
     stacki.h
 

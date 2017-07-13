@@ -76,14 +76,14 @@ struct Dictory {
 };
 
 struct Main_File_Directory_Item {
-    char name[Directory_Item_Length];	//文件名字
+    QString name;	//文件名字
     int iNode;			//i结点的编号,-1表示没有
-    char psw[20];
+    QString psw;
     Main_File_Directory_Item() {}
-    Main_File_Directory_Item(char *n, int i) {
-        strcpy(name, n);
+    Main_File_Directory_Item(QString n, int i) {
+        name = n;
         iNode = i;
-        strcpy(name, "/");
+        name = "/";
     }
 };
 struct Main_File_Directory {
@@ -94,10 +94,10 @@ struct Main_File_Directory {
     Main_File_Directory() {
         iNode = -1;
         sz = Directory_Item_Num;
-        for (int i = 0; i<Directory_Num; i++) {
+        for (int i = 0; i<Directory_Item_Num; i++) {
             item[i].iNode = -1;
-            strcpy(item[i].name,"/" );
-            strcpy(item[i].psw,"/" );
+            item[i].name = "/" ;
+            item[i].psw = "/" ;
         }
     }
     int size() {
@@ -111,18 +111,18 @@ struct Main_File_Directory {
         sz = Directory_Item_Num;
         for (int i = 0; i<Directory_Item_Num; i++) {
             item[i].iNode = -1;
-            strcpy(item[i].name,"/" );
-            strcpy(item[i].psw,"/" );
+            item[i].name = "/" ;
+            item[i].psw = "/" ;
         }
     }
     Main_File_Directory_Item get(int i) {
         return item[i];
     }
-    int add(char *name, int id) { //name为name的i结点id
+    int add(QString name, int id) { //name为name的i结点id
         for (int i = 0; i<Directory_Item_Num; i++) {
             if (item[i].iNode == -1) {
                 item[i].iNode = id;
-                strcpy(item[i].name, name);
+                item[i].name = name ;
                 return i; // 返回的是SFD的位置
             }
         }
@@ -134,13 +134,13 @@ struct Main_File_Directory {
 };
 
 struct Symbol_File_Directory_Item {
-    char name[Directory_Item_Length];	//文件名字
+    QString name;	//文件名字
     int iNode;			//i结点的编号,-1表示没有
     Symbol_File_Directory_Item() {}
-    Symbol_File_Directory_Item(char *n, int i) {
-        strcpy(name, n);
+    Symbol_File_Directory_Item(QString n, int i) {
+        name=n;
         iNode = i;
-        strcpy(name, "/");
+        name="/";
     }
 };
 struct Symbol_File_Directory {
@@ -154,7 +154,7 @@ struct Symbol_File_Directory {
         sz = Directory_Item_Num;
         for (int i = 0; i<Directory_Item_Num; i++) {
             item[i].iNode = -1;
-            strcpy(item[i].name,"/" );
+            item[i].name="/" ;
         }
     }
     int size() {
@@ -168,17 +168,17 @@ struct Symbol_File_Directory {
         sz = Directory_Item_Num;
         for (int i = 0; i<Directory_Item_Num; i++) {
             item[i].iNode = -1;
-            strcpy(item[i].name,"/" );
+            item[i].name="/";
         }
     }
     Symbol_File_Directory_Item get(int i) {
         return item[i];
     }
-    int add(char *name, int id) {//name为name的i结点id
+    int add(QString name, int id) {//name为name的i结点id
         for (int i = 0; i<Directory_Item_Num; i++) {
             if (item[i].iNode== -1) {
                 item[i].iNode = id;
-                strcpy(item[i].name, name);
+                item[i].name = name;
                 //cout << "分配的SFD ID是" << i << endl;
                 return i; // 返回的是SFD的位置
             }

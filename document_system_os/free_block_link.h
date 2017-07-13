@@ -65,7 +65,6 @@ void  initchengzu(int s_id){//开始空闲i节点号s_id
 int* fenpei(int Needing){//Needings是需要分配的块数
     int m=0;
     int *a = new int [100];
-
     for(int i=0;i<100;i++) {
         a[i]=-1;
     }
@@ -132,11 +131,11 @@ void huishou(int Hui){//Hui是回收的块数
         }
     }
 }
-void groupblock(string writen, int diskAddress[]){
+void groupblock(QString writen, int diskAddress[]){
     void writenIn();
     int k=0,m=0;
     int *p, R_num,Needing;
-    q=writen.c_str();
+    QString q=writen;
     //cout<<q[0]<<endl;
     R_num=writen.length();
     Needing=R_num/Block_Size+1;
