@@ -19,6 +19,9 @@ using namespace std;
 struct block {
     int id;
     QString R;
+    block(){
+        R="";
+    }
 };
 
 /*
@@ -131,6 +134,7 @@ struct Main_File_Directory {
 
 struct Symbol_File_Directory_Item {
     QString name;	//文件名字
+
     int iNode;			//i结点的编号,-1表示没有
     Symbol_File_Directory_Item() {}
     Symbol_File_Directory_Item(QString n, int i) {
@@ -194,15 +198,14 @@ struct zu{
     i_node B[50];
 }A[20];
 
-    const char SYSTEM[10] = "data.txt";	// 文件系统名称
-    int username;
+    /*int username;
     QFile fp;
     Super_Block super_block;
     Main_File_Directory MFD;
     Symbol_File_Directory SFD;
     iNode inode[INode_Num];
     Symbol_File_Directory sfdTable[Directory_Num];
-    block Z[Block_Number-Start_Block_Num];//ont  group
-    QVector<QString>PWD;
+    block Z[Block_Number];//ont  group
+    QVector<QString>PWD;*/
 
 #endif // STRUCT_H

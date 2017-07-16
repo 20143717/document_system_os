@@ -17,7 +17,9 @@ SOURCES += main.cpp\
     admin.cpp \
     getnewuser.cpp \
     deleteolduser.cpp \
-    file_system.cpp
+    file_system.cpp \
+    showtext.cpp \
+    shuxing.cpp
 
 HEADERS  += mainwindow.h \
     define.h \
@@ -28,10 +30,14 @@ HEADERS  += mainwindow.h \
     file_system.h \
     struct.h \
     free_block_link.h \
-    stacki.h
+    stacki.h \
+    showtext.h \
+    shuxing.h
 
 FORMS    += mainwindow.ui \
     admin.ui \
     getnewuser.ui \
     deleteolduser.ui \
-    file_system.ui
+    file_system.ui \
+    showtext.ui \
+    shuxing.ui

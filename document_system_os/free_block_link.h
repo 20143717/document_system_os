@@ -132,7 +132,6 @@ void huishou(int Hui){//Hui是回收的块数
     }
 }
 void groupblock(QString writen, int diskAddress[]){
-    void writenIn();
     int k=0,m=0;
     int *p, R_num,Needing;
     QString q=writen;
@@ -141,7 +140,7 @@ void groupblock(QString writen, int diskAddress[]){
     Needing=R_num/Block_Size+1;
     //initchengzu(0);
     p=fenpei(Needing);
-
+    qDebug()<<"$$";
     for(int i=0;i<100;i++) {
         diskAddress[i] = p[i];
         //cout<<p[i]<<endl;

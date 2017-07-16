@@ -22,7 +22,7 @@ extern Main_File_Directory MFD;
 extern Symbol_File_Directory SFD;
 extern iNode inode[INode_Num];
 extern Symbol_File_Directory sfdTable[Directory_Num];
-extern block Z[Block_Number-Start_Block_Num];//ont  group
+extern block Z[Block_Number];//ont  group
 extern QVector<QString>PWD;
 extern USER user;
 /*

@@ -17,14 +17,15 @@
 #include "define.h"
 #include "struct.h"
 #include "free_block_link.h"
+#include "showtext.h"
 
-extern Super_Block super_block;
-extern Main_File_Directory MFD;
-extern Symbol_File_Directory SFD;
-extern iNode inode[INode_Num];
-extern Symbol_File_Directory sfdTable[Directory_Num];
-extern block Z[Block_Number-Start_Block_Num];//ont  group
-extern QVector<QString>PWD;
+Super_Block super_block;
+Main_File_Directory MFD;
+Symbol_File_Directory SFD;
+iNode inode[INode_Num];
+Symbol_File_Directory sfdTable[Directory_Num];
+block Z[Block_Number];//ont  group
+QVector<QString>PWD;
 extern USER user;
 
 file_system::file_system(QWidget *parent) :
@@ -34,63 +35,125 @@ file_system::file_system(QWidget *parent) :
     ui->setupUi(this);
     choose_name="/";
     choose_type="";
+
+    connect(ShowText.a,SIGNAL(clicked(bool)),this,SLOT(vim()));
 }
 
 file_system::~file_system()
 {
     delete ui;
 }
+
 void file_system::showEvent(QShowEvent *){
     QMessageBox::information(this,"提示","欢迎用户"+user.login_user.name+"登录!");
     ui->listWidget->setIconSize(QSize(80,70));
     ui->listWidget->setViewMode(QListView::IconMode);
     ui->listWidget->setMovement(QListView::Static);
-    run();
     ui->login_name->setText(user.login_user.name);
     ui->path->setText("/");
+    run();
+    addUser();
+    int iNode = getINodeOfCurrentPath();
+    //qDebug()<<iNode<<endl;
+    for(int i=0;i<Directory_Item_Num;i++) {
+        if(sfdTable[inode[iNode].diskAddress[0]].item[i].iNode != -1) {
+            //qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].iNode<<"!!!"<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<endl;
+            if(sfdTable[inode[iNode].diskAddress[0]].item[i].name!="/") {
+                QIcon icon;
+                QListWidgetItem *item=new QListWidgetItem();
+                item->setText(sfdTable[inode[iNode].diskAddress[0]].item[i].name);
+                if(inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode==1){
+                    icon.addFile("./file.jpg");
+                    item->setIcon(icon);
+                    item->setWhatsThis("file");
+                    ui->listWidget->addItem(item);
+                }
+                else if(inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode==0){
+                    icon.addFile("./folder.jpg");
+                    item->setIcon(icon);
+                    item->setWhatsThis("folder");
+                    ui->listWidget->addItem(item);
+                }
+                //ui->listWidget->addItem(item);
+                qDebug()<<inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode<<" "<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<endl;
+            }
+        }
+    }
 }
+
 void file_system::contextMenuEvent(QContextMenuEvent * event){
 
     QMenu* popMenu = new QMenu(this);
     QListWidgetItem *choose_item = ui->listWidget->itemAt(event->x()-ui->listWidget->x(),event->y()-ui->listWidget->y());
     if(choose_item!=NULL){
-        choose_name=choose_item->text();
+        QString choose_name=choose_item->text();
+        qDebug()<<"@@"<<choose_name;
         if(choose_item->whatsThis()=="file"){
             QAction *action1= new QAction("打开文件",this);
+            connect(action1,SIGNAL(triggered()),this,SLOT(cat()));
             QAction *action2= new QAction("删除文件",this);
-            QAction *action5=new QAction("属性", this);
-            connect(action1,SIGNAL(triggered()),this,SLOT(cat(choose_name)));
-            connect(action2,SIGNAL(triggered()),this,SLOT(rm(choose_name)));
+            connect(action2,SIGNAL(triggered()),this,SLOT(rmf()));
+            QAction *action5= new QAction("属性", this);
             connect(action5,SIGNAL(triggered()),this,SLOT(ll()));
             popMenu->addAction(action1);
             popMenu->addAction(action2);
             popMenu->addAction(action5);
+            popMenu->exec(QCursor::pos());
             choose_type="file";
         }
         else{
             QAction *action1=new QAction("打开文件夹", this);
             QAction *action2=new QAction("删除文件夹", this);
             QAction *action5=new QAction("属性", this);
-            QString file_name=choose_item->text();
-            connect(action1,SIGNAL(triggered()),this,SLOT(cd(choose_name)));
-            connect(action2,SIGNAL(triggered()),this,SLOT(rmf(choose_name)));
-            connect(action5,SIGNAL(triggered()),this,SLOT(ls()));
+            connect(action1,SIGNAL(triggered()),this,SLOT(cd()));
+            connect(action2,SIGNAL(triggered()),this,SLOT(rmf()));
+            connect(action5,SIGNAL(triggered()),this,SLOT(ll()));
             popMenu->addAction(action1);
             popMenu->addAction(action2);
             popMenu->addAction(action5);
+            popMenu->exec(QCursor::pos());
             choose_type="folder";
         }
     }
-    QAction *action3=new QAction("新建文件", this);
-    connect(action3,SIGNAL(triggered()),this,SLOT(touch()));
-    QAction *action4=new QAction("新建文件夹", this);
-    connect(action4,SIGNAL(triggered()),this,SLOT(mkdir()));
-    popMenu->addAction(action3);
-    popMenu->addAction(action4);
-    popMenu->exec(QCursor::pos());
+    else{
+        QAction *action3=new QAction("新建文件", this);
+        connect(action3,SIGNAL(triggered()),this,SLOT(touch()));
+        QAction *action4=new QAction("新建文件夹", this);
+        connect(action4,SIGNAL(triggered()),this,SLOT(mkdir()));
+        popMenu->addAction(action3);
+        popMenu->addAction(action4);
+        popMenu->exec(QCursor::pos());
+    }
+    ui->listWidget->clear();
+    int iNode = getINodeOfCurrentPath();
+    //qDebug()<<iNode<<endl;
+    for(int i=0;i<Directory_Item_Num;i++) {
+        if(sfdTable[inode[iNode].diskAddress[0]].item[i].iNode != -1) {
+            //qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].iNode<<"!!!"<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<endl;
+            if(sfdTable[inode[iNode].diskAddress[0]].item[i].name!="/") {
+                QIcon icon;
+                QListWidgetItem *item=new QListWidgetItem();
+                item->setText(sfdTable[inode[iNode].diskAddress[0]].item[i].name);
+                if(inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode==1){
+                    icon.addFile("./file.jpg");
+                    item->setIcon(icon);
+                    item->setWhatsThis("file");
+                    ui->listWidget->addItem(item);
+                }
+                else if(inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode==0){
+                    icon.addFile("./folder.jpg");
+                    item->setIcon(icon);
+                    item->setWhatsThis("folder");
+                    ui->listWidget->addItem(item);
+                }
+                //ui->listWidget->addItem(item);
+                qDebug()<<inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode<<" "<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<endl;
+            }
+        }
+    }
 }
 
-void file_system::format(){
+   void file_system::format(){
     switch(QMessageBox::question(this,"Warning","ALL DATA ON THIS FILESYSTEM WILL BE LOST!\nProceed with Format(Y/N)?",
                           QMessageBox::Ok|QMessageBox::Cancel,QMessageBox::Ok)){
         case QMessageBox::Ok:{
@@ -224,16 +287,11 @@ void file_system::format(){
                     stream <<sfdTable[i].item[j].name<< endl << sfdTable[i].item[j].iNode<< endl;
                 }
             }
-
             //ofstr4 << "block"<<endl;
 
             // init freeblcok
-
-            for(int i=0;i<Block_Number;i++) {
-                for(int j=0;j<Block_Size;j++) {
-                    Z[i].R[j] = '/';
-                }
-            }
+            for(int i=0;i<Block_Number;++i)
+                Z[i].R="/";
             for(int i=0;i<Block_Number;i++) {
                 stream<<Z[i].R<<endl;
             }
@@ -254,16 +312,16 @@ void file_system::format(){
     }
 }
 
-void file_system::run(){
+   void file_system::run(){
     init();
     QString order;
     QString pwd_tmp = "/root/";
-    qDebug()<<user.login_user.name<<"@";
+    //qDebug()<<user.login_user.name<<"@";
     QVector<QString>::iterator it;
     for(it = PWD.begin();it!=PWD.end();it++) {
         qDebug()<<"/"<<*it;
     }
-    qDebug()<<"$ ";
+    //qDebug()<<"$ ";
     //用map参照
     /*while (true)
     {
@@ -442,14 +500,14 @@ void file_system::run(){
             cout<<"$ ";}*/
 }
 
-void file_system::init(){
+   void file_system::init(){
     QFile file("./data.txt");
     if (!file.exists())
     {
         format();
         load();
-        char tmp[2];
-        gets(tmp);
+        /*char tmp[2];
+        gets(tmp);*/
     }
     else
     {
@@ -458,7 +516,7 @@ void file_system::init(){
     }
 }
 
-void file_system::load(){
+   void file_system::load(){
     QFile file("./data.txt");
 
     if(!file.open(QIODevice::ReadOnly )){
@@ -473,12 +531,12 @@ void file_system::load(){
         super_block.dataBlockFreeNum=stream.readLine().toInt();
     for (int i = 0; i < INode_Free_Stack_Num; i++) {
         super_block.iNodeFreeStack[i]=stream.readLine().toInt();
-        qDebug() << super_block.iNodeFreeStack[i];
+        //qDebug() << super_block.iNodeFreeStack[i];
     }
 
     for (int i = 0; i < Data_Block_Free_Stack_Num; i++) {
         super_block.dataBlockFreeStack[i]=stream.readLine().toInt();
-        qDebug() << super_block.dataBlockFreeStack[i];
+        //qDebug() << super_block.dataBlockFreeStack[i];
     }
     for (int i = 0; i<INode_Num; i++)
     {
@@ -497,17 +555,12 @@ void file_system::load(){
            inode[i].diskAddress[j] =stream.readLine().toInt();;
         }
     }
-
-    /*
-     *
-     *
-     *
     for (int i = 0; i < MFD.size(); i++)//mfd
     {
-        Main_File_Directory_Item item;
+       Main_File_Directory_Item item;
        item.name =stream.readLine();
        item.psw =stream.readLine();
-       item.iNode =stream.readLine();
+       item.iNode =stream.readLine().toInt();
         if (i == 0) {
             MFD.item[0].iNode = 2;
             MFD.item[0].name=user.login_user.name;
@@ -522,14 +575,14 @@ void file_system::load(){
 
     for (int j = 0; j < Directory_Num; j++) {//sfd
         stream >> sfdTable[j].iNode;
-        qDebug() << sfdTable[j].iNode;
+       // qDebug() << sfdTable[j].iNode;
         for (int i = 0; i < SFD.size(); i++)
         {
             Symbol_File_Directory_Item item;
             stream >> item.name >> item.iNode   ;
-            qDebug() << item.iNode<<" "<<item.name;
+            //qDebug() << item.iNode<<" "<<item.name;
             sfdTable[j].add(item.name, item.iNode);
-            qDebug() << sfdTable[j].item[i].name << endl;
+            //qDebug() << sfdTable[j].item[i].name << endl;
         }
     }
 
@@ -546,18 +599,17 @@ void file_system::load(){
     //when open this system, we are at /root/
     PWD.push_back("root");
     //cout<<PWD[0]<<endl;
-
-
-
-    */
     }
 }
 
-void file_system::writein(){
+   void file_system::writein(){
     QFile file("./data.txt");
     QTextStream stream(&file);
     //superblock
-    if(file.open(QIODevice::WriteOnly | QIODevice::Append))
+    if(file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        qDebug()<<"OK"<<endl;
+    file.close();
+    if(file.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
     stream << super_block.id << endl << super_block.iNodeTotalNum <<endl <<
               super_block.iNodeFreeNum << endl << super_block.dataBlockTotalNum << endl <<
               super_block.dataBlockFreeNum  << endl;
@@ -587,23 +639,21 @@ void file_system::writein(){
         //cout<< sfdm.id << " " << sfdm.name << " " << sfdm.psw << " ";
         stream  << item.name << endl <<item.psw<< endl << item.iNode << endl;
     }
-    for (int j = 0; j < Directory_Num;j++) {//sfd
-        stream <<sfdTable[j].iNode<<endl;
-        for (int i = 0; i < SFD.size(); i++)
+    for (int i = 0; i < Directory_Num;i++) {//sfd
+        stream <<sfdTable[i].iNode<<endl;
+        for (int j = 0; j < SFD.size(); j++)
         {
-            Symbol_File_Directory_Item item = sfdTable[j].get(i);
+            Symbol_File_Directory_Item item = sfdTable[i].get(j);
             stream << item.name << endl<< item.iNode << endl ;
         }
     }
     //ofstr4 << "block"<<endl;
-    for(int i=0;i<Block_Number;i++) {
+    for(int i=0;i<Block_Number;i++)
             stream<<Z[i].R<<endl;
-    }
-    file.flush();
     file.close();
 }
 
-int file_system::iNodeMalloc() {
+   int file_system::iNodeMalloc() {
     if (super_block.iNodeFreeNum <= 0) {
         return -1;
     }
@@ -635,7 +685,7 @@ void file_system::sudoFormat(){
     }
 }
 
-int file_system::getINodeOfCurrentPath() {
+   int file_system::getINodeOfCurrentPath() {
     int iNode=1;
     if(PWD.size() > 1) {
 
@@ -649,11 +699,10 @@ int file_system::getINodeOfCurrentPath() {
         }
         if(flag == 0) {
             iNode = 2;
-            QVector<QString>::iterator it;
-            for(it = PWD.begin()+1;it!=PWD.end();it++) {
+            for(int i= 1;i<=PWD.size();i++) {
                 bool flag = 0;
                 for(int j=0;j<Directory_Item_Num;j++) {
-                    if(sfdTable[inode[iNode].diskAddress[0]].item[j].name == *it ) {
+                    if(sfdTable[inode[iNode].diskAddress[0]].item[j].name == PWD.at(i) ) {
                         iNode = sfdTable[inode[iNode].diskAddress[0]].item[j].iNode;
                         flag = 1;
                     }
@@ -689,7 +738,8 @@ int file_system::getINodeOfCurrentPath() {
     return iNode;
 }
 
-void file_system::cd(QString dir){
+void file_system::cd(){
+    QString dir=choose_name;
     if(dir == "..") {
         cd_back();
     } else {
@@ -707,6 +757,7 @@ void file_system::cd(QString dir){
             cout <<"error: not exist this dir"<<endl;
         }
     }
+    ls();
 }
 
 void file_system::cd_back(){
@@ -724,66 +775,70 @@ void file_system::pwd(){
 }
 
 void file_system::ls() {
-
+    ui->listWidget->clear();
     //judge wheather user have this right
     int iNode = getINodeOfCurrentPath();
+    //qDebug()<<iNode<<endl;
     for(int i=0;i<Directory_Item_Num;i++) {
         //cout<<sfdTable[iNode].item[i].name<<endl;
         //cout<<strlen(sfdTable[iNode].item[i].name)<<endl;
         if(sfdTable[inode[iNode].diskAddress[0]].item[i].iNode != -1) {
             if(sfdTable[inode[iNode].diskAddress[0]].item[i].name!="/") {
-                qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<" ";
+                QIcon icon;
+                QListWidgetItem *item=new QListWidgetItem();
+                item->setText(sfdTable[inode[iNode].diskAddress[0]].item[i].name);
+                if(inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode==1){
+                    icon.addFile("./file.jpg");
+                    item->setIcon(icon);
+                    item->setWhatsThis("file");
+                    ui->listWidget->addItem(item);
+                }
+                else if(inode[sfdTable[inode[iNode].diskAddress[0]].item[i].iNode].fileMode==0){
+                    icon.addFile("./folder.jpg");
+                    item->setIcon(icon);
+                    item->setWhatsThis("folder");
+                    ui->listWidget->addItem(item);
+                }
+                //qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<" ";
             }
         }
     }
-    qDebug()<<endl;
 }
 
 void file_system::ll() {
     //需要添加时间
 
     int iNode = getINodeOfCurrentPath();
-    cout<<"total "<<inode[iNode].size<<"B"<<endl;
+    //qDebug()<<"@@"<<iNode;
+    QString x=QString::number(inode[iNode].size,10);
+    QString a="total   "+x+"B";
+    QString b;
+    QString c;
+    QString d;
+    QString e;
     for(int i=0;i<Directory_Item_Num;i++) {
         if(sfdTable[inode[iNode].diskAddress[0]].item[i].iNode != -1) {
             if(sfdTable[inode[iNode].diskAddress[0]].item[i].name!= "/") {
-
                 int tmp = sfdTable[inode[iNode].diskAddress[0]].item[i].iNode;
-                switch (inode[tmp].userRight[user.login_user.id]){
-                    case 0:
-                        cout<<"---"<<" ";
-                        break;
-                    case 1:
-                        cout<<"r--"<<" ";
-                        break;
-                    case 2:
-                        cout<<"-w-"<<" ";
-                        break;
-                    case 3:
-                        cout<<"rw-"<<" ";
-                        break;
-                    case 4:
-                        cout<<"--x"<<" ";
-                        break;
-                    case 5:
-                        cout<<"r-x"<<" ";
-                        break;
-                    case 6:
-                        cout<<"-wx"<<" ";
-                        break;
-                    case 7:
-                        cout<<"rwx"<<" ";
-                        break;
-                }
-                qDebug()<<MFD.item[inode[tmp].userId].name<<" ";
-                qDebug()<<inode[tmp].size<<"B"<<" ";
-                qDebug()<<inode[tmp].time<<" ";
-                qDebug()<<sfdTable[inode[iNode].diskAddress[0]].item[i].name<<" ";
+                qDebug()<<"!!"<<tmp;
+                int y=inode[tmp].userRight[user.login_user.id];
+                if(y==7) b="rwx";
+                else if(y==0) b="---";
+                else if(y==1) b="r--";
+                else if(y==2) b="-w-";
+                else if(y==3) b="rw-";
+                else if(y==4) b="--x";
+                else if(y==5) b="r-x";
+                else if(y==6) b="-wx";
+                else b="rwx";
+                c=MFD.item[inode[tmp].userId].name;
+                d=inode[tmp].time;
+                e=sfdTable[inode[iNode].diskAddress[0]].item[i].name;
+                SX.set(a,b,c,d,e);
+                SX.show();
             }
-            cout<<endl;
         }
     }
-    cout<<endl;
 }
 
 int file_system::sfdMalloc(int getINode) {
@@ -805,8 +860,7 @@ int file_system::sfdMalloc(int getINode) {
     return tmp;
 }
 
-void file_system::mkdir() {
-    QString dir="123";
+   void file_system::mkdir() {
     int getINode = iNodeMalloc();
     if(getINode == -1) {
         printf("error: can't mkdir more directories!\n");
@@ -814,13 +868,6 @@ void file_system::mkdir() {
     }
     // ensure the filename is unique
     int iNode = getINodeOfCurrentPath();
-    for(int i=0;i<Directory_Item_Num;i++) {
-        if(sfdTable[inode[iNode].diskAddress[0]].item[i].name == dir) {
-            cout<<"error: this dir or file has existed!"<<endl;
-            return;
-        }
-    }
-
     inode[getINode].id = getINode;
     inode[getINode].fileCount = 0;
     inode[getINode].size = 0;
@@ -838,26 +885,45 @@ void file_system::mkdir() {
     inode[getINode].time=QString(QLatin1String(ctime(&t)));
     int tmpsfd = sfdMalloc(getINode);
     if( tmpsfd == -1) {
-        cout<<"error: cant't mkdir more dir!"<<endl;
+        QMessageBox::information(NULL,"error","cant't mkdir more dir!");
         return;
     } else {
         inode[getINode].diskAddress[0] = tmpsfd;
     }
-
     inode[iNode].fileCount +=1;
     inode[iNode].size+=inode[getINode].size;
-    QString namex;
-    namex=dir;
-    if (sfdTable[inode[iNode].diskAddress[0]].add(namex, getINode) == -1)
-    {
-        cout<<"error: can't make more directories!";
-        return ;
+    bool ok;
+    QString fname=QInputDialog::getText(NULL, "新建文件夹", "请输入文件夹名",QLineEdit::Normal, "newfolder", &ok);
+    if(ok){
+        for(int i=0;i<Directory_Item_Num;i++) {
+            if(sfdTable[inode[iNode].diskAddress[0]].item[i].name == fname) {
+                QMessageBox::information(NULL,"ERROR","this dir or file has existed!");
+                return;
+            }
+        }
+        QString namex;
+        namex=fname;
+        if (sfdTable[inode[iNode].diskAddress[0]].add(namex, getINode) == -1)
+        {
+            QMessageBox::information(NULL,"error","can't make more directories!");
+            return ;
+        }
+        writein();
+        QIcon icon;
+        QListWidgetItem *item=new QListWidgetItem();
+        icon.addFile("./folder.jpg");
+        item->setIcon(icon);
+        item->setWhatsThis("folder");
+        item->setText(fname);
+        ui->listWidget->addItem(item);
     }
-    writein();
+    else{
+        QMessageBox::information(NULL,"ERROR","创建失败");
+    }
 }
 
-void file_system::rmf(QString dir) {
-
+void file_system::rmf() {
+    QString dir= choose_name;
     int iNode1 = getINodeOfCurrentPath();
     int iNode;
     for(int i=0;i<Directory_Item_Num;i++) {
@@ -900,29 +966,38 @@ void file_system::rename(QString dir1,QString dir2) {
     writein();
 }
 
-void file_system::touch(){
-    QString fname="123";
-    if (createFile(fname)) {
-         qDebug() << "Create " << fname << " sucessfully!" << endl;
+   void file_system::touch(){
+    bool ok;
+    QString fname=QInputDialog::getText(NULL,"新建文件","请输入文件名",QLineEdit::Normal,"newfile",&ok);
+    if(ok){
+        if(createFile(fname)){
+            QIcon icon;
+            QListWidgetItem *item=new QListWidgetItem();
+            icon.addFile("./file.jpg");
+            item->setIcon(icon);
+            item->setWhatsThis("file");
+            item->setText(fname);
+            ui->listWidget->addItem(item);
+        }
     }
-    else {
-         qDebug() << "Error! Failed to create file! " << endl;
+    else{
+        QMessageBox::information(NULL,"ERROR","创建失败");
     }
 }
 
-int file_system::createFile(QString fname){
+   int file_system::createFile(QString fname){
     //fsize = (fsize%BLOCKSIZE == 0) ? (fsize / BLOCKSIZE) : (fsize / BLOCKSIZE + 1);
     int getINode = iNodeMalloc();
     if (getINode == -1)
     {
-        printf("error: can't touch more files!\n");
+        QMessageBox::information(NULL,"ERROR","can't touch more files!");
         return 0;
     }
-
     int iNode = getINodeOfCurrentPath();
+    //qDebug()<<"%%%"<<iNode;
     for(int i=0;i<Directory_Item_Num;i++) {
         if(sfdTable[inode[iNode].diskAddress[0]].item[i].name == fname) {
-            cout<<"error: this dir or file has existed!"<<endl;
+            QMessageBox::information(NULL,"ERROR","this folder or file has existed!");
             return 0;
         }
     }
@@ -939,24 +1014,26 @@ int file_system::createFile(QString fname){
             inode[getINode].userRight[i] = 0;
         }
     }
-    time_t t;
-    time(&t);
-    inode[getINode].time=QString(QLatin1String(ctime(&t)));
-    inode[iNode].fileCount +=1;
+    time_t tt;
+    time(&tt);
+    inode[getINode].time=QString(QLatin1String(ctime(&tt)));
+    qDebug()<<QString(QLatin1String(ctime(&tt)));
+    inode[iNode].fileCount++;
     inode[iNode].size+=inode[getINode].size;
     QString namex;
     namex = fname;
     if (sfdTable[inode[iNode].diskAddress[0]].add(namex, getINode) == -1)
     {
-        cout<<"error: can't make more directories!";
+        QMessageBox::information(NULL,"ERROR","can't make more directories!");
         return 0;
     }
     writein();
     return 1;
 }
 
-void file_system::vim(QString file){
-
+   void file_system::vim(){
+    QString file ="456";
+    qDebug()<<"!!"<<file;
     int iNode = getINodeOfCurrentPath();
     bool flag = 0;
     for(int i=0;i<Directory_Item_Num;i++) {
@@ -966,17 +1043,17 @@ void file_system::vim(QString file){
         }
     }
     if(flag == 0) {
-        cout <<"error: not exist this file!"<<endl;
+        qDebug() <<"error: not exist this file!"<<endl;
         return ;
     }
 
     //cout<<file<<endl;
     QString content;
+    content=ShowText.getstring();
     //getline(cin,content);
     int diskAddress[100];
     memset(diskAddress,-1,sizeof(diskAddress));
-    /*groupblock(content,diskAddress);*/
-
+    groupblock(content,diskAddress);
     int fileINode;
     for(int i=0;i<Directory_Item_Num;i++) {
         if(sfdTable[inode[iNode].diskAddress[0]].item[i].name == file) {
@@ -991,10 +1068,8 @@ void file_system::vim(QString file){
             sum++;
         }
     }
-
-    cout<<"sum:"<<sum<<endl;
     if(sum > INode_Max_Num) {
-        cout<<"error: this file is too large!"<<endl;
+        qDebug()<<"error: this file is too large!"<<endl;
         return ;
     } else {
         for(int i=0;i<sum;i++) {
@@ -1018,8 +1093,8 @@ void file_system::renamef(QString dir1,QString dir2) {
     writein();
 }
 
-void file_system::cat(QString file) {
-    //cout<<file<<endl;
+   void file_system::cat(){
+    QString file = choose_name;
     int iNode = getINodeOfCurrentPath();
 
     int fileINode;
@@ -1029,15 +1104,59 @@ void file_system::cat(QString file) {
             break;
         }
     }
-
     for(int i=0;i<INode_Max_Num;i++) {
         if(inode[fileINode].diskAddress[i] != -1) {
-            //cout<<inode[fileINode].diskAddress[i]<<endl;
-            qDebug()<<Z[inode[fileINode].diskAddress[i]].R<<endl;
-            //puts(Z[inode[fileINode].diskAddress[i]].R);
+            QString thing=Z[inode[fileINode].diskAddress[i]].R;
+            ShowText.set(thing);
+            ShowText.show();
         }
-
     }
-    cout<<endl;
 }
 
+void file_system::rm(){
+    rmf();
+}
+
+void file_system::addUser() {
+    int i;
+    for (i = 0; i < Directory_Item_Num; i++)
+    {
+        if (MFD.item[i].iNode == -1) break;
+    }
+    if (i >= Directory_Item_Num) return ;
+    else
+    {
+
+        MFD.item[i].name="1";
+        MFD.item[i].psw="1";
+        MFD.item[i].iNode = iNodeMalloc();//表示目录
+        //写节点
+        inode[MFD.item[i].iNode].id = MFD.item[i].iNode;
+        inode[MFD.item[i].iNode].fileCount = 0;
+        inode[MFD.item[i].iNode].size = 0;
+        inode[MFD.item[i].iNode].fileMode = 1;//目录
+        inode[MFD.item[i].iNode].userId = user.login_user.id;
+
+        //对父节点进行操作
+        inode[1].fileCount++;
+        for (int i = 0; i < INode_Max_Num; i++)
+        {
+            if (inode[1].diskAddress[i] == -1)
+            {
+                inode[1].diskAddress[i] = MFD.item[i].iNode;
+                break;
+            }
+
+        }
+        //对其分配一个sfd
+        int sfd = sfdMalloc(MFD.item[i].iNode);
+        sfdTable[sfd].iNode = MFD.item[i].iNode;
+    }
+    writein();
+}
+void file_system::on_pushButton_clicked(){
+    this->hide();
+}
+void file_system::on_pushButton_1_clicked(){
+    cd();
+}

@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->File_system.hide();
+    this->resize(400,300);
     File_system.setParent(this);
 }
 
